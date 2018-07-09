@@ -1,5 +1,6 @@
 'use strict';
 
+const matches = require('@macklinu/matches');
 const getDocsUrl = require('./util').getDocsUrl;
 
 const ruleMsg =
@@ -13,31 +14,27 @@ const validateArguments = expression => {
   );
 };
 
-const isExpectAssertionsOrHasAssertionsCall = expression => {
-  try {
-    const expectAssertionOrHasAssertionCall =
-      expression.type === 'CallExpression' &&
-      expression.callee.type === 'MemberExpression' &&
-      expression.callee.object.name === 'expect' &&
-      (expression.callee.property.name === 'assertions' ||
-        expression.callee.property.name === 'hasAssertions');
+const isExpectAssertionsOrHasAssertionsCall = node =>
+  matches({
+    type: 'CallExpression',
+    'callee.type': 'MemberExpression',
+    'callee.object.name': 'expect',
+    'callee.property.name'(name) {
+      const isAssertion = /^assertions|hasAssertions/.test(name);
+      if (!isAssertion) {
+        return false;
+      }
+      if (name === 'assertions') {
+        return validateArguments(node);
+      }
+      return true;
+    },
+  })(node);
 
-    if (expression.callee.property.name === 'assertions') {
-      return expectAssertionOrHasAssertionCall && validateArguments(expression);
-    }
-    return expectAssertionOrHasAssertionCall;
-  } catch (e) {
-    return false;
-  }
-};
-
-const isTestOrItFunction = node => {
-  return (
-    node.type === 'CallExpression' &&
-    node.callee &&
-    (node.callee.name === 'it' || node.callee.name === 'test')
-  );
-};
+const isTestOrItFunction = matches({
+  type: 'CallExpression',
+  'callee.name': /^it|test$/,
+});
 
 const getFunctionFirstLine = functionBody => {
   return functionBody[0] && functionBody[0].expression;

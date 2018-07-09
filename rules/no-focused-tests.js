@@ -1,17 +1,17 @@
 'use strict';
 
+const matches = require('@macklinu/matches');
 const getDocsUrl = require('./util').getDocsUrl;
 
-const testFunctions = Object.assign(Object.create(null), {
-  describe: true,
-  it: true,
-  test: true,
+const TEST_FUNCTION_REGEX = /^describe|it|test$/;
+
+const matchesTestFunction = matches({
+  name: TEST_FUNCTION_REGEX,
 });
 
-const matchesTestFunction = object => object && testFunctions[object.name];
-
-const isCallToFocusedTestFunction = object =>
-  object && object.name[0] === 'f' && testFunctions[object.name.substring(1)];
+const isCallToFocusedTestFunction = matches({
+  name: name => name[0] === 'f' && TEST_FUNCTION_REGEX.test(name.substring(1)),
+});
 
 const isPropertyNamedOnly = property =>
   property && (property.name === 'only' || property.value === 'only');

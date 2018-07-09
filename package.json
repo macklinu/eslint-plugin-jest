@@ -33,6 +33,9 @@
     "precommit": "lint-staged",
     "commitmsg": "commitlint -e $GIT_PARAMS"
   },
+  "dependencies": {
+    "@macklinu/matches": "^1.0.0"
+  },
   "devDependencies": {
     "@commitlint/cli": "^6.0.1",
     "@commitlint/config-conventional": "^6.0.2",

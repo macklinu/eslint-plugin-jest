@@ -1,7 +1,13 @@
 'use strict';
 
+const matches = require('@macklinu/matches');
 const getDocsUrl = require('./util').getDocsUrl;
 const getNodeName = require('./util').getNodeName;
+
+const isJasmineAssignement = matches({
+  'object.name': 'jasmine',
+  'parent.type': 'AssignmentExpression',
+});
 
 module.exports = {
   meta: {
@@ -88,29 +94,27 @@ module.exports = {
         }
       },
       MemberExpression(node) {
-        if (node.object.name === 'jasmine') {
-          if (node.parent.type === 'AssignmentExpression') {
-            if (node.property.name === 'DEFAULT_TIMEOUT_INTERVAL') {
-              context.report({
-                fix(fixer) {
-                  return [
-                    fixer.replaceText(
-                      node.parent,
-                      `jest.setTimeout(${node.parent.right.value})`
-                    ),
-                  ];
-                },
-                node,
-                message: 'Illegal usage of jasmine global',
-              });
-              return;
-            }
-
+        if (isJasmineAssignement(node)) {
+          if (node.property.name === 'DEFAULT_TIMEOUT_INTERVAL') {
             context.report({
+              fix(fixer) {
+                return [
+                  fixer.replaceText(
+                    node.parent,
+                    `jest.setTimeout(${node.parent.right.value})`
+                  ),
+                ];
+              },
               node,
               message: 'Illegal usage of jasmine global',
             });
+            return;
           }
+
+          context.report({
+            node,
+            message: 'Illegal usage of jasmine global',
+          });
         }
       },
     };

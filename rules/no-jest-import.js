@@ -1,8 +1,14 @@
 'use strict';
 
+const matches = require('@macklinu/matches');
 const getDocsUrl = require('./util').getDocsUrl;
 const getNodeName = require('./util').getNodeName;
 const message = `Jest is automatically in scope. Do not import "jest", as Jest doesn't export anything.`;
+
+const isJestRequire = matches({
+  callee: callee => getNodeName(callee) === 'require',
+  'arguments.0.value': 'jest',
+});
 
 module.exports = {
   meta: {
@@ -21,12 +27,7 @@ module.exports = {
         }
       },
       CallExpression(node) {
-        const calleeName = getNodeName(node.callee);
-        if (
-          calleeName === 'require' &&
-          node.arguments[0] &&
-          node.arguments[0].value === 'jest'
-        ) {
+        if (isJestRequire(node)) {
           context.report({
             loc: {
               end: {

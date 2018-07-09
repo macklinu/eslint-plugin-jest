@@ -1,25 +1,16 @@
 'use strict';
 
+const matches = require('@macklinu/matches');
 const getDocsUrl = require('./util').getDocsUrl;
 
-const isItTestOrDescribeFunction = node => {
-  return (
-    node.type === 'CallExpression' &&
-    node.callee &&
-    (node.callee.name === 'it' ||
-      node.callee.name === 'test' ||
-      node.callee.name === 'describe')
-  );
-};
+const isItTestOrDescribeFunction = matches({
+  type: 'CallExpression',
+  'callee.name': /^it|test|describe$/,
+});
 
-const isItDescription = node => {
-  return (
-    node.arguments &&
-    node.arguments[0] &&
-    (node.arguments[0].type === 'Literal' ||
-      node.arguments[0].type === 'TemplateLiteral')
-  );
-};
+const isItDescription = matches({
+  'arguments.0.type': /^(Template)?Literal$/,
+});
 
 const testDescription = node => {
   const firstArgument = node.arguments[0];

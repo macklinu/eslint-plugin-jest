@@ -1,17 +1,13 @@
 'use strict';
 
+const matches = require('@macklinu/matches');
 const getDocsUrl = require('./util').getDocsUrl;
 const isFunction = require('./util').isFunction;
 
 const reportMsg =
   'Promise should be returned to test its fulfillment or rejection';
 
-const isThenOrCatch = node => {
-  return (
-    node.property &&
-    (node.property.name === 'then' || node.property.name === 'catch')
-  );
-};
+const isThenOrCatch = matches({ 'property.name': /^then|catch$/ });
 
 const isExpectCallPresentInFunction = body => {
   if (body.type === 'BlockStatement') {
@@ -25,15 +21,12 @@ const isExpectCallPresentInFunction = body => {
   }
 };
 
-const isExpectCall = expression => {
-  return (
-    expression &&
-    expression.type === 'CallExpression' &&
-    expression.callee.type === 'MemberExpression' &&
-    expression.callee.object.type === 'CallExpression' &&
-    expression.callee.object.callee.name === 'expect'
-  );
-};
+const isExpectCall = matches({
+  type: 'CallExpression',
+  'callee.type': 'MemberExpression',
+  'callee.object.type': 'CallExpression',
+  'callee.object.callee.name': 'expect',
+});
 
 const reportReturnRequired = (context, node) => {
   context.report({
@@ -63,12 +56,10 @@ const isPromiseReturnedLater = (node, testFunctionBody) => {
   );
 };
 
-const isTestFunc = node => {
-  return (
-    node.type === 'CallExpression' &&
-    (node.callee.name === 'it' || node.callee.name === 'test')
-  );
-};
+const isTestFunc = matches({
+  type: 'CallExpression',
+  'callee.name': /^it|test$/,
+});
 
 const getFunctionBody = func => {
   if (func.body.type === 'BlockStatement') return func.body.body;
@@ -113,17 +104,13 @@ const verifyExpectWithReturn = (
   });
 };
 
-const isAwaitExpression = node => {
-  return node.parent.parent && node.parent.parent.type === 'AwaitExpression';
-};
+const isAwaitExpression = matches({
+  'parent.parent.type': 'AwaitExpression',
+});
 
-const isHavingAsyncCallBackParam = testFunction => {
-  try {
-    return testFunction.params[0].type === 'Identifier';
-  } catch (e) {
-    return false;
-  }
-};
+const isHavingAsyncCallBackParam = matches({
+  'params.0.type': 'Identifier',
+});
 
 module.exports = {
   meta: {

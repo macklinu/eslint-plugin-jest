@@ -1,16 +1,17 @@
 'use strict';
 
+const matches = require('@macklinu/matches');
 const path = require('path');
 const version = require('../package.json').version;
 
 const REPO_URL = 'https://github.com/jest-community/eslint-plugin-jest';
 
-const expectCase = node =>
-  node.callee.name === 'expect' &&
-  node.arguments.length === 1 &&
-  node.parent &&
-  node.parent.type === 'MemberExpression' &&
-  node.parent.parent;
+const expectCase = matches({
+  'callee.name': 'expect',
+  'arguments.length': 1,
+  'parent.type': 'MemberExpression',
+  'parent.parent': Boolean,
+});
 
 const expectNotCase = node =>
   expectCase(node) &&
@@ -104,16 +105,19 @@ const getNodeName = node => {
   return node.name;
 };
 
-const isTestCase = node =>
-  node &&
-  node.type === 'CallExpression' &&
-  testCaseNames[getNodeName(node.callee)];
+const isTestCase = matches({
+  type: 'CallExpression',
+  callee: callee => testCaseNames[getNodeName(callee || {})],
+});
 
-const isDescribe = node =>
-  node.type === 'CallExpression' && describeAliases[getNodeName(node.callee)];
+const isDescribe = matches({
+  type: 'CallExpression',
+  callee: callee => describeAliases[getNodeName(callee || {})],
+});
 
-const isFunction = node =>
-  node.type === 'FunctionExpression' || node.type === 'ArrowFunctionExpression';
+const isFunction = matches({
+  type: /^FunctionExpression|ArrowFunctionExpression$/,
+});
 
 /**
  * Generates the URL to documentation for the given rule name. It uses the
